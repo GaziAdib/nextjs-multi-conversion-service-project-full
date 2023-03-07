@@ -15,20 +15,21 @@ const UrlShortService = () => {
         setFullUrl(e.target.value.trim());
     }
 
-    console.log(shortUrl)
-
     const fetchData = async () => {
-        try {
-            setLoading(true);
-            const res = await axios.get(`https://api.shrtco.de/v2/shorten?url=${fullUrl}`);
-            setShortUrl(res.data?.result?.short_link);
-        } catch (error) {
-            console.log(error);
-            setError(error ? error.message : "Something went wrong");
-            setLoading(false)
-        } finally {
-            setLoading(false);
+        if (fullUrl !== "") {
+            try {
+                setLoading(true);
+                const res = await axios.get(`https://api.shrtco.de/v2/shorten?url=${fullUrl}`);
+                setShortUrl(res.data?.result?.short_link);
+            } catch (error) {
+                console.log(error);
+                setError(error ? error.message : "Something went wrong");
+                setLoading(false)
+            } finally {
+                setLoading(false);
+            }
         }
+
     }
 
 
