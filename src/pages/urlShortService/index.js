@@ -46,7 +46,7 @@ const UrlShortService = () => {
         <Layout>
             <div>
                 <div className='text-center'>
-                    <h1 className='text-red-600 font-bold mx-5 my-5 py-5 text-4xl text-center'>URL Shortner Service</h1>
+                    <h1 className='text-rose-600 font-bold mx-5 my-5 py-5 text-4xl text-center font-serif'>Short URL Not Your Di**k 😂</h1>
 
                     <div className='text-center mx-auto py-auto flex w-full justify-center items-center'>
                         <div>
