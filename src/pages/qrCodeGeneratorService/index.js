@@ -13,9 +13,9 @@ const QRCodeGenerator = () => {
                     <QrCodeGenerator />
                 </div>
 
-                {/* <div>
+                <div>
                     <QrCodeScanner />
-                </div> */}
+                </div>
             </div>
         </div>
     )
