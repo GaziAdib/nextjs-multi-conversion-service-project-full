@@ -30,7 +30,7 @@ const QrCodeGenerator = () => {
 
             <hr />
             {
-                result && <img className='text-center border-2 shadow-sm items-center align-content-center mx-auto mt-5 border-gray-400 rounded-sm' src={result ? result : 'null'} />
+                result && <a href={result} download><img className='text-center border-2 shadow-sm items-center align-content-center mx-auto mt-5 border-gray-400 rounded-sm' src={result ? result : 'null'} /></a>
             }
 
         </>
