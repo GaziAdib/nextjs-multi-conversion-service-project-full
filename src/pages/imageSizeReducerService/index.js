@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import Image from 'next/image';
 
@@ -58,6 +58,7 @@ const ImageSizeReducer = () => {
             console.log(error);
         }
     }
+
 
     return (
         <>
