@@ -1,12 +1,27 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import Jimp from 'jimp';
+// import Image from 'next/image';
 
 import { createCanvas, loadImage } from 'canvas';
 
-const ImageTypeConverter = () => {
+
+// const removeBackground = async (file) => {
+//     const image = await Jimp.read(file);
+//     image.background(0xffffffff).quality(90).greyscale();
+//     const buffer = await image.getBufferAsync(Jimp.MIME_PNG);
+//     return `data:image/png;base64,${buffer.toString('base64')}`;
+// };
+
+
+const ImageBackgroundRemove = () => {
+
 
     const [userImage, setUserImage] = useState('');
 
     const [outputImageResult, setOutputImage] = useState('');
+
+    const canvasRef = useRef(null);
+
 
     const convertToPNG = async (file) => {
         const data = URL.createObjectURL(file);
@@ -34,7 +49,7 @@ const ImageTypeConverter = () => {
     return (
         <div>
             <div className='mx-auto py-5 my-5 text-center items-center justify-items-center'>
-                <h1 className='text-3xl font-bold text-blue-600 font-serif'>Change Image Type JPEG-PNJ | PNJ-JPEG </h1>
+                <h1 className='text-3xl font-bold text-blue-600 font-serif'>Remove Image Background !</h1>
 
                 <input type="file" className="" onChange={(e) => setUserImage(e.target.files[0])} />
 
@@ -54,4 +69,4 @@ const ImageTypeConverter = () => {
     )
 }
 
-export default ImageTypeConverter;
+export default ImageBackgroundRemove
