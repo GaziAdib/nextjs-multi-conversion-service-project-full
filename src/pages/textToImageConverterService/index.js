@@ -49,7 +49,7 @@ const textToImageConvert = () => {
                 const transcript = event.results[0][0].transcript;
                 console.log(transcript);
                 setText(transcript);
-
+                recognition.stop();
 
             });
 
