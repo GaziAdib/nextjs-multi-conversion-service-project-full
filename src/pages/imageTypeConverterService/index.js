@@ -8,6 +8,8 @@ import dynamic from 'next/dynamic';
 
 // import heic2any from 'heic2any';
 
+
+
 const ImageTypeConverter = () => {
 
     const [userImage, setUserImage] = useState('');
@@ -15,6 +17,41 @@ const ImageTypeConverter = () => {
     const [outputImageResult, setOutputImage] = useState('');
 
     const [pngFile, setPngFile] = useState('');
+
+    const [convertedFile, setConvertedFile] = useState('');
+
+
+
+    async function convertHEICtoJPEG(heicFile) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        let img = await loadImage(heicFile?.name);
+        let finalImg = URL.createObjectURL(img);
+        const blob = await finalImg.arrayBuffer();
+        const blobUrl = URL.createObjectURL(new Blob([blob], { type: 'image/heic' }));
+
+        return new Promise((resolve, reject) => {
+            console.log('asdss')
+            finalImg.onload = function () {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                canvas.toBlob(function (blob) {
+                    resolve(new File([blob], heicFile.name.replace(/\.heic$/, '.jpg'), { type: 'image/jpeg' }));
+                }, 'image/jpeg');
+            };
+            finalImg.onerror = function () {
+                reject(new Error('Failed to load image'));
+            };
+            finalImg.src = blobUrl;
+        });
+    }
+
+
+
+
+
+
 
 
 
@@ -102,11 +139,14 @@ const ImageTypeConverter = () => {
     };
 
 
-    const handlePngToJpeg = async (file) => {
-        const outputImage = await convertPngToJpeg(file)
-        setOutputImage(outputImage);
-    }
 
+
+    async function handleFileInputChange(event) {
+        const heicFile = event.target.files[0];
+        const jpegFile = await convertHEICtoJPEG(heicFile);
+        console.log('jpegFile', jpegFile);
+        setConvertedFile(jpegFile);
+    }
 
 
 
@@ -119,7 +159,7 @@ const ImageTypeConverter = () => {
 
                 <input type="file" className="" onChange={(e) => setUserImage(e.target.files[0])} />
 
-                <input type="file" accept=".heic" onChange={handleFileChange} />
+                <input type="file" accept=".heic" onChange={handleFileInputChange} />
 
 
 
@@ -134,7 +174,11 @@ const ImageTypeConverter = () => {
 
                     <img src={outputImageResult} />
 
-                    {pngFile && <img src={URL.createObjectURL(pngFile)} />}
+                    {convertedFile && (
+                        <img src={URL.createObjectURL(convertedFile)} alt="Converted image" crossOrigin="anonymous" />
+                    )}
+
+                    {/* {pngFile && <img src={URL.createObjectURL(pngFile)} />} */}
                 </div>
 
 
