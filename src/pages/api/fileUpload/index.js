@@ -4,6 +4,12 @@ import multer from 'multer';
 import libre from 'libreoffice-convert'
 import docxIntoPdf from 'docx-pdf';
 
+// json to excel
+
+import ExcelJS from 'exceljs';
+
+
+
 const cloudinary = require('cloudinary').v2;
 
 // Configuration 
@@ -58,138 +64,113 @@ export default async function fileUpload(req, res) {
                 console.error(err);
                 res.status(500).json({ message: 'Error uploading file' });
             } else {
-
-
                 console.log('Uploading', req?.file);
-                let outputFilePath = Date.now() + "output.pdf";
-                let mainFilePath = path.join(process.cwd(), 'public/uploads', req?.file?.filename);
-                docxIntoPdf(mainFilePath, outputFilePath, (err, result) => {
-                    if (err) {
-                        console.error(err);
-                    } else {
-                        console.log('result', result);
+                // Get the file extension
+                const fileExtension = req.file.originalname.split('.').pop();
+                console.log(fileExtension);
 
-                        // cloudinary upload
+                if (fileExtension === 'json') {
+                    console.log('its json file');
 
-                        // const publicId = `pdf/${uuidv4()}`;
-                        // const uploadResult = await cloudinary.uploader.upload(pdfStream, {
-                        //     public_id: publicId,
-                        //     resource_type: 'raw',
-                        // });
+                    // work with json file to excel file convert
 
-                        const cloudResponse = cloudinary.uploader.upload(result?.filename, {
-                            public_id: Date.now() + "output.pdf",
-                            resource_type: 'raw',
-                        }).catch((err) => {
-                            console.log(err);
-                        });
+                    try {
 
-                        cloudResponse.then((result1) => {
-                            let resultOut = result1?.secure_url;
+                        if (req?.file) {
 
-                            console.log('secure_url', result1);
+                            let mainFilePath = path.join(process.cwd(), 'public/uploads', req?.file?.filename);
 
-                            res.setHeader('Content-Type', 'application/pdf');
-                            res.setHeader('Content-Disposition', `attachment; filename="${outputFilePath}"`);
-                            res.status(200).json({ message: 'File uploaded successfully', result: result, url: resultOut, public_id: result1.public_id, filename: outputFilePath });
-                            res.download(outputFilePath, (err) => {
-                                if (err) {
-                                    console.log(`Error downloading file: ${err}`);
-                                }
-                                // Delete the file after download is complete
-                                fs.unlinkSync(filePath);
+                            console.log('mainfilepath', mainFilePath);;
+
+                            const jsonData = fs.readFileSync(mainFilePath, 'utf-8');
+
+                            console.log('jsonData', jsonData);
+
+
+                            // let data = JSON.stringify(jsonData);
+
+                            // Parse the JSON data
+                            const data = JSON.parse(jsonData);
+
+                            console.log('data string', data);
+
+                            // Create a new workbook
+                            const workbook = new ExcelJS.Workbook();
+
+                            // Add a new worksheet
+                            const worksheet = workbook.addWorksheet('Data');
+
+                            // Add headers to the worksheet
+                            const headers = Object?.keys(data[0]);
+
+                            console.log('headers------', headers);
+                            worksheet.addRow(headers);
+
+                            // Add data to the worksheet
+                            data?.forEach((item) => {
+                                const row = [];
+                                headers.forEach((header) => {
+                                    row.push(item[header]);
+                                });
+                                worksheet.addRow(row);
                             });
-                        });
 
-                        // res.setHeader('Content-Type', 'application/pdf');
-                        // res.setHeader('Content-Disposition', `attachment; filename="${outputFilePath}"`);
-                        // res.status(200).json({ message: 'File uploaded successfully', result: result, url: url, filename: outputFilePath });
-                        // res.download(outputFilePath, (err) => {
-                        //     if (err) {
-                        //         console.log(`Error downloading file: ${err}`);
-                        //     }
-                        //     // Delete the file after download is complete
-                        //     fs.unlinkSync(filePath);
-                        // });
+                            // Save the workbook to a file
+                            workbook.xlsx.writeFile('data.xlsx')
+                                .then(() => {
+                                    console.log('Excel file saved!');
+                                })
+                                .catch((error) => {
+                                    console.error(error);
+                                });
+
+                        }
+
+
+                    } catch (error) {
+                        console.error(error);
+                        res.status(500).json({ error: 'Something went wrong in json to excel convert' });
                     }
-                })
-
-                // const pdfBuffer = await convertToPdf(req?.file);
-
-                // res.setHeader('Content-Type', 'application/pdf');
-                // res.send(pdfBuffer);
 
 
-                // // Read the contents of the uploaded file
-                // const fileContents = await fs.promises.readFile(req?.file?.path);
+                }
 
-                // // Create a new PDF document
-                // const pdfDoc = await PDFDocument.create();
+                if (fileExtension === 'docx') {
+                    let outputFilePath = Date.now() + "output.pdf";
+                    let mainFilePath = path.join(process.cwd(), 'public/uploads', req?.file?.filename);
+                    docxIntoPdf(mainFilePath, outputFilePath, (err, result) => {
+                        if (err) {
+                            console.error(err);
+                        } else {
+                            console.log('result', result);
+                            const cloudResponse = cloudinary.uploader.upload(result?.filename, {
+                                public_id: Date.now() + "output.pdf",
+                                resource_type: 'raw',
+                            }).catch((err) => {
+                                console.log(err);
+                            });
 
-                // // Add a new page to the PDF document
-                // const page = pdfDoc.addPage();
+                            cloudResponse.then((result1) => {
+                                let resultOut = result1?.secure_url;
 
-                // // Embed the uploaded file into the PDF document
-                // const embeddedFile = await pdfDoc.embedPdf(fileContents);
-                // page.drawEmbeddedPdf(embeddedFile, {
-                //     x: 0,
-                //     y: 0,
-                //     width: page.getWidth(),
-                //     height: page.getHeight()
-                // });
+                                console.log('secure_url', result1);
 
-                // // Serialize the PDF document to a buffer
-                // const pdfBytes = await pdfDoc.save();
+                                res.setHeader('Content-Type', 'application/pdf');
+                                res.setHeader('Content-Disposition', `attachment; filename="${outputFilePath}"`);
+                                res.status(200).json({ message: 'File uploaded successfully', result: result, url: resultOut, public_id: result1.public_id, filename: outputFilePath });
+                                res.download(outputFilePath, (err) => {
+                                    if (err) {
+                                        console.log(`Error downloading file: ${err}`);
+                                    }
+                                    // Delete the file after download is complete
+                                    fs.unlinkSync(filePath);
+                                });
+                            });
 
-                // // Return the PDF document as a download
-                // res.setHeader('Content-Type', 'application/pdf');
-                // res.setHeader('Content-Disposition', 'attachment; filename=file.pdf');
-                // res.send({
-                //     message: 'File uploaded successfully',
-                //     pdfBytes: pdfBytes,
-                // });
+                        }
+                    })
 
-                // Everything went fine.
-
-
-
-                // const file = req?.file;
-                // console.log('file', file);
-                // const inputFilePath = file?.path;
-                // const outputFilePath = path.join(
-                //     process.cwd(),
-                //     'public',
-                //     'uploads',
-                //     `${file.filename.split('.').slice(0, -1).join('.')}.pdf`
-                // );
-                // const result = docxToPdf(inputFilePath, outputFilePath);
-                // res.status(200).json({
-                //     result: result,
-                //     message: 'File uploaded and converted successfully',
-                //     filename: file.originalname,
-                //     filepath: `/uploads/${file.filename.split('.').slice(0, -1).join('.')}.pdf`,
-                // });
-
-
-
-
-
-
-
-                // const { path: inputFile } = req?.file;
-
-                // const pdfFilePath = `${inputFile?.split('.').slice(0, -1).join('.')}.pdf`;
-
-                // const result = docxToPdf(inputFile, pdfFilePath);
-
-                // const pdfFile = fs.readFileSync(pdfFilePath);
-
-                // res.setHeader('Content-Type', 'application/pdf');
-                // res.setHeader('Content-Disposition', `attachment; filename=${pdfFilePath}`);
-                // res.send(pdfFile);
-
-                // fs.unlinkSync(inputFile);
-                // fs.unlinkSync(pdfFilePath);
+                }
 
             }
         });
@@ -198,9 +179,6 @@ export default async function fileUpload(req, res) {
         res.status(500).json({ message: 'Error uploading file' });
     }
 }
-
-
-
 
 
 

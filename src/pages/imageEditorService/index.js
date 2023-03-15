@@ -218,7 +218,7 @@ const ImageEditor = () => {
             <div className='image_editor'>
                 <div className='card'>
                     <div className='card_header'>
-                        <h2>---- Image Editor ----</h2>
+                        <h2 className='text-2xl font-serif font-semibold'>NextJS Photo Editing App</h2>
                     </div>
                     <div className='card_body'>
                         <div className='sidebar'>
@@ -234,7 +234,7 @@ const ImageEditor = () => {
 
                                 <div className='filter_slider'>
                                     <div className='label_bar'>
-                                        <label>Rotate</label>
+                                        <label>{property.name}</label>
                                         <span>100%</span>
                                     </div>
                                     <input name={property.name} onChange={inputHandle} value={state[property.name]} type='range' min='0' max={property.maxValue} />
