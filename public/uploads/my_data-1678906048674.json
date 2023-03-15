@@ -1,0 +1,16 @@
+
+[
+{
+	"name": "Adib",
+	"email": "adib@gmail.com",
+	"address": "dhaka",
+	"city": {
+		"name" : "dhaka"
+	}
+},
+{
+	"name": "Adiba",
+	"email": "adiba@gmail.com",
+	"address": "dhakaa"
+}
+]

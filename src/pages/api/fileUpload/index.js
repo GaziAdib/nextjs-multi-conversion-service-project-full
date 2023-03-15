@@ -90,6 +90,10 @@ export default async function fileUpload(req, res) {
                             // let data = JSON.stringify(jsonData);
 
                             // Parse the JSON data
+
+                            // test code
+
+
                             const data = JSON.parse(jsonData);
 
                             console.log('data string', data);
@@ -100,14 +104,31 @@ export default async function fileUpload(req, res) {
                             // Add a new worksheet
                             const worksheet = workbook.addWorksheet('Data');
 
-                            // Add headers to the worksheet
-                            const headers = Object?.keys(data[0]);
+                            // test flatten 
 
-                            console.log('headers------', headers);
+                            function flattenObject(obj, prefix = '') {
+                                const flatObject = {};
+                                for (const [key, value] of Object.entries(obj)) {
+                                    if (typeof value === 'object' && value !== null) {
+                                        const flatValue = flattenObject(value, `${prefix}${key}.`);
+                                        Object.assign(flatObject, flatValue);
+                                    } else {
+                                        flatObject[`${prefix}${key}`] = value;
+                                    }
+                                }
+                                return flatObject;
+                            }
+
+                            // Flatten nested objects in the data
+                            const flatData = data.map(item => flattenObject(item));
+
+
+                            // Add headers to the worksheet
+                            const headers = Object.keys(flatData[0]);
                             worksheet.addRow(headers);
 
                             // Add data to the worksheet
-                            data?.forEach((item) => {
+                            flatData.forEach((item) => {
                                 const row = [];
                                 headers.forEach((header) => {
                                     row.push(item[header]);
@@ -115,10 +136,46 @@ export default async function fileUpload(req, res) {
                                 worksheet.addRow(row);
                             });
 
+
+                            // // Add headers to the worksheet
+                            // const headers = Object?.keys(data[0]);
+
+                            // console.log('headers------', headers);
+                            // worksheet.addRow(headers);
+
+                            // // Add data to the worksheet
+                            // data?.forEach((item) => {
+                            //     const row = [];
+                            //     headers.forEach((header) => {
+                            //         row.push(item[header]);
+                            //     });
+                            //     worksheet.addRow(row);
+                            // });
+
                             // Save the workbook to a file
                             workbook.xlsx.writeFile('data.xlsx')
                                 .then(() => {
                                     console.log('Excel file saved!');
+
+
+                                    //save the file to cloudinary
+
+                                    const cloudResponse = cloudinary.uploader.upload('data.xlsx', {
+                                        public_id: Date.now() + "output.xlsx",
+                                        resource_type: 'raw',
+                                    }).catch((err) => {
+                                        console.log(err);
+                                    });
+
+                                    cloudResponse.then((result1) => {
+                                        let resultOut = result1?.secure_url;
+
+                                        console.log('secure_url', result1);
+
+                                        res.status(200).json({ message: 'File uploaded successfully', result: result1, url: resultOut });
+
+                                    });
+
                                 })
                                 .catch((error) => {
                                     console.error(error);
