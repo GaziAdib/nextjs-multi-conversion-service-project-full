@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { createElement, useEffect, useRef, useState } from 'react'
 
 import { GrRotateLeft, GrRotateRight } from 'react-icons/gr';
 
@@ -6,7 +6,14 @@ import { CgMergeVertical, CgMergeHorizontal } from 'react-icons/cg';
 
 import { IoMdUndo, IoMdRedo, IoIosImage } from 'react-icons/io';
 
+import ReactCrop from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css'
+
 const ImageEditor = () => {
+
+
+    const [crop, setCrop] = useState('')
+    const [details, setDetails] = useState('');
 
     const [state, setState] = useState({
         image: '',
@@ -55,6 +62,8 @@ const ImageEditor = () => {
     )
 
 
+
+
     const imageHandle = (e) => {
         if (e.target.files?.length !== 0) {
             const reader = new FileReader();
@@ -69,9 +78,78 @@ const ImageEditor = () => {
     }
 
 
-    // input on Change Logics
+    // crop image
 
-    console.log(state);
+    const imageCropHandle = () => {
+
+        const canvas = document.createElement('canvas');
+        const scaleX = details.naturalWidth / details.width;
+        const scaleY = details.naturalHeight / details.height;
+
+        canvas.width = crop?.width;
+        canvas.height = crop?.height;
+
+        const ctx = canvas.getContext('2d');
+
+        ctx.drawImage(
+            details,
+            crop?.x * scaleX,
+            crop?.y * scaleY,
+            crop?.width * scaleX,
+            crop?.height * scaleX,
+            0,
+            0,
+            crop.width,
+            crop.height
+        )
+
+        const base64Url = canvas.toDataURL('image/jpg');
+
+        setState({
+            ...state,
+            image: base64Url
+        })
+
+    }
+
+    // save image after editing
+
+    const saveImage = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = details.naturalWidth;
+        canvas.height = details.naturalHeight;
+
+        const ctx = canvas.getContext('2d');
+
+        ctx.filter = `brightness(${state?.brightness}%) grayscale(${state?.grayscale}%) sepia(${state?.sepia}%) saturate(${state?.saturate}%) contrast(${state?.contrast}%) hue-rotate(${state?.hueRotate}deg)`
+
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+
+        ctx.rotate(state?.rotate * Math.PI / 180);
+
+        ctx.scale(state?.vertical, state?.horizontal);
+
+        ctx.drawImage(
+            details,
+            -canvas.width / 2,
+            -canvas.height / 2,
+            canvas.width,
+            canvas.height
+
+        )
+
+        const link = document.createElement('a')
+
+        link.download = 'edited_image.jpg';
+
+        link.href = canvas.toDataURL()
+
+        link.click();
+
+    }
+
+
+    // input on Change Logics
 
     const inputHandle = (e) => {
         setState({
@@ -96,6 +174,42 @@ const ImageEditor = () => {
             rotate: state.rotate + 90
         })
     }
+
+
+    // flipping
+
+    const verticalFlip = () => {
+        setState({
+            ...state,
+            vertical: state.vertical === 1 ? -1 : 1
+        })
+    }
+
+    const horizontalFlip = () => {
+        setState({
+            ...state,
+            horizontal: state.horizontal === 1 ? -1 : 1
+        })
+    }
+
+
+    // reset filter
+
+    const resetFilter = () => {
+        setState({
+            ...state,
+            brightness: 100,
+            grayscale: 0,
+            sepia: 0,
+            hueRotate: 0,
+            saturate: 100,
+            contrast: 100,
+            rotate: 0,
+            vertical: 1,
+            horizontal: 1
+        })
+    }
+
 
 
 
@@ -132,15 +246,15 @@ const ImageEditor = () => {
                                     <div className='icon'>
                                         <div onClick={leftRotate}><GrRotateLeft /></div>
                                         <div onClick={rightRotate}><GrRotateRight /></div>
-                                        <div><CgMergeVertical /></div>
-                                        <div><CgMergeHorizontal /></div>
+                                        <div onClick={verticalFlip}><CgMergeVertical /></div>
+                                        <div onClick={horizontalFlip}><CgMergeHorizontal /></div>
                                     </div>
                                 </div>
                             </div>
 
                             <div className='reset'>
-                                <button>Reset</button>
-                                <button className='save'>Save</button>
+                                <button onClick={resetFilter}>Reset</button>
+                                <button onClick={saveImage} className='save'>Save Image</button>
                             </div>
 
 
@@ -150,7 +264,9 @@ const ImageEditor = () => {
                         <div className='image_section'>
                             <div className='image'>
                                 {
-                                    state?.image ? <img style={{ filter: `brightness(${state?.brightness}%) grayscale(${state?.grayscale}%) sepia(${state?.sepia}%) saturate(${state?.saturate}%) contrast(${state?.contrast}%) hue-rotate(${state?.hueRotate}deg)`, transform: `rotate(${state?.rotate}deg) scale(${state?.vertical},${state?.horizontal})` }} src={state?.image} alt='image' /> : <label htmlFor='choose'>
+                                    state?.image ? <ReactCrop crop={crop} onChange={c => setCrop(c)}>
+                                        <img onLoad={(e) => setDetails(e.currentTarget)} style={{ filter: `brightness(${state?.brightness}%) grayscale(${state?.grayscale}%) sepia(${state?.sepia}%) saturate(${state?.saturate}%) contrast(${state?.contrast}%) hue-rotate(${state?.hueRotate}deg)`, transform: `rotate(${state?.rotate}deg) scale(${state?.vertical},${state?.horizontal})` }} src={state?.image} alt='image' />
+                                    </ReactCrop> : <label htmlFor='choose'>
                                         <IoIosImage />
                                         <span>Choose Image</span>
                                     </label>
@@ -161,7 +277,9 @@ const ImageEditor = () => {
                             <div className='image_select'>
                                 <button className='undo'><IoMdUndo /></button>
                                 <button className='redo'><IoMdRedo /></button>
-                                <button className='crop'>Crop Image</button>
+                                {
+                                    crop && <button onClick={imageCropHandle} className='crop'>Crop Image</button>
+                                }
                                 <label htmlFor='choose'>Choose Image</label>
                                 <input onChange={imageHandle} type='file' id='choose' />
                             </div>
